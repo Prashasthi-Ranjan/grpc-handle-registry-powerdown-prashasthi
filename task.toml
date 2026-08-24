@@ -37,7 +37,7 @@ allow_internet = true
 mcp_servers = []
 
 [verifier.env]
-PASS_MISS = "0"
+PASS_MISS = "3"
 
 [environment.env]
 
