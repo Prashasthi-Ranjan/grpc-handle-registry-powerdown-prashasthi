@@ -1,0 +1,24 @@
+OIF-CMIS-05.3 hard boundary v5 - Page00 Admin 8.3 + Page01h 8.4 + lower 8.2
+
+Lower:
+  offset2 bit7 FlatMem 1=flat 0=paged per 8.2.3
+  offset3 bits3:1 ModuleState (b>>1)&0x07 values 1=LowPwr 2=PwrUp 3=Ready 4=PwrDn 5=Fault per 8.2.4
+  offset0 Identifier SFF-8024 0x11 QSFP28 0x18 QSFP-DD 0x19 OSFP 0x1E DD800 else Unknown format 0x%02x lower
+  offset85 MediaType 0x01 MMF 0x02 SMF 0x03 CU-PASSIVE 0x04 CU-ACTIVE 0x05 BASE-T else UNKNOWN
+  offset86 MediaInterface only when MediaType==SMF 0x02 decode 0x14 100G-DR 0x15 FR1 0x16 LR1 0x18 200G-FR4 0x1C DR4 0x1D FR4 0x4D ZR 0x6C 800G-ZR 0x56 DR8 0x7A FR4 0x7B LR4 else Unknown/SMF vs Undecoded/non-SMF
+
+Page00 p00:
+  offset1 len16 VendorName 129-144 AsciiTrim trailing spaces 0x20 and nulls 0x00 ONLY preserve leading/internal: "ACME          "->"ACME", "  ACME  \x00\x00"->"  ACME", " A B "->" A B", internal null preserved
+  offset17 len3 VendorOUI 145-147 FormatOUI uppercase colon "00:11:22" not lower, "%02X:%02X:%02X"
+  offset20 len16 VendorPN 148-163 AsciiTrim trailing only
+  offset36 len16 VendorSN 164-179 AsciiTrim trailing only
+  offset72 PowerByte: bits7:5 PowerClass raw (b>>5)&0x07 +1 => 1..8 per 8.3.7, bits4:0 MaxPower raw b&0x1F *100 mW per 8.3.8. Avocado fails +1 and *100 and masking lower bits vs upper.
+
+Page01h p01:
+  14 HostLaneCount 0..8 else error, 0 allowed
+  15 MediaLaneCount 0..8 else error
+  20 HostAssignMask bitmask sorted asc 0..7 empty 0x00->[] non-nil new backing each call, 0xFF->[0..7], 0x05->[0,2], no dups, pos correspond to set bits, copy-not-ref: mutating returned slice must not affect next call (Avocado reuses backing)
+  21 MediaAssignMask same
+  22 SuppPages mask bits0..6 =10h,11h,12h,14h,20h,16h,04h bit7 ignore per Table 8-46
+  23 CdbMask bit0 sup, bits1-2 bg (b>>1)&0x03 0..3, bit3 full per Table 8-54
+  39 DurationByte low nibble PwrUp high nibble PwrDn Table 8-48 codes 0:0 1:1 2:5 3:10 4:50 5:100 6:500 7:1000 8:5000 9:10000 10:60000 11:300000 12:600000 13:3000000 14:0 15:0 do not swap

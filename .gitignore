@@ -1,13 +1,4 @@
-.git/
-__pycache__/
-*.pyc
+/app/
+logs/
+*.log
 .DS_Store
-.env
-.venv/
-node_modules/
-*.egg-info/
-.ruff_cache/
-.mypy_cache/
-.pytest_cache/
-*.harbor
-.review/

@@ -1,0 +1,30 @@
+# SFF-8024 — media type and media interface codes
+media_types:
+  0x01: MMF
+  0x02: SMF
+  0x03: CU-PASSIVE
+  0x04: CU-ACTIVE
+  0x05: BASE-T
+  other: UNKNOWN
+
+media_interface_smf:
+  0x14: 100G-DR
+  0x15: 100G-FR1
+  0x16: 100G-LR1
+  0x18: 200G-FR4
+  0x1C: 400G-DR4
+  0x1D: 400G-FR4
+  0x4D: 400G-ZR
+  0x6C: 800G-ZR
+  0x56: 800G-DR8
+  0x7A: 800G-FR4
+  0x7B: 800G-LR4
+  unknown_smf: Unknown
+  non_smf: Undecoded
+
+identifiers:
+  0x11: QSFP28
+  0x18: QSFP-DD
+  0x19: OSFP
+  0x1E: QSFP-DD800
+  other: Unknown
