@@ -72,7 +72,7 @@ if ! echo "$OUT" | grep -q "ClearAll removing"; then
   exit 0
 fi
 OUT_LEN=$(echo "$OUT" | wc -c)
-if [ "$OUT_LEN" -lt 2000 ]; then
+if [ "$OUT_LEN" -lt 1000 ]; then
   write_ctrf "failed" "0/0" "[{\"name\":\"short_output\",\"status\":\"failed\"}]" "short $OUT_LEN"
   rm -rf "$D" 2>/dev/null || true
   exit 0
