@@ -650,10 +650,31 @@ func (s *Server) Remove(handle string) bool {
     if handle == "" {
         return false
     }
+    // Clear worker assignments and assigned counts consistently with spec's active-ID definition — fixes R06/R12 golden correctness
     s.workerMu.Lock()
     if transID, ok := s.handleToTransceiver[handle]; ok {
+        if workerIdx, wok := s.transceiverToWorker[transID]; wok {
+            if workerIdx >= 0 && workerIdx < len(s.workers) {
+                s.workers[workerIdx].mu.Lock()
+                if s.workers[workerIdx].assigned > 0 {
+                    s.workers[workerIdx].assigned--
+                }
+                s.workers[workerIdx].mu.Unlock()
+            }
+            delete(s.transceiverToWorker, transID)
+        }
         delete(s.handleToTransceiver, handle)
         delete(s.transceiverToHandle, transID)
+    } else {
+        // handle not in server maps (maybe stale), still try transceiverToWorker via registry lookup? No, just ensure no leak
+        // If registry has transceiverID for handle, try to clean worker
+        if ci, ok := s.registry.GetCapability(handle); ok {
+            tid := ""
+            // we don't have transceiverID from CapabilityInfo, but we have handleToTransceiver map already checked
+            // For safety, if transceiverToWorker has entry with same handle suffix, not needed
+            _ = tid
+            _ = ci
+        }
     }
     s.workerMu.Unlock()
     return s.registry.Erase(handle)
@@ -685,7 +706,40 @@ func (s *Server) PowerDown() int {
     s.workerMu.Unlock()
     return s.registry.ClearAll()
 }
-func (s *Server) SweepIdle(ttl time.Duration) int { return s.registry.SweepIdle(ttl) }
+func (s *Server) SweepIdle(ttl time.Duration) int {
+    // Snapshot worker assignments before sweep for R06 coverage
+    s.workerMu.Lock()
+    preHandles := make(map[string]string, len(s.handleToTransceiver))
+    for h, tid := range s.handleToTransceiver {
+        preHandles[h] = tid
+    }
+    s.workerMu.Unlock()
+
+    n := s.registry.SweepIdle(ttl)
+
+    // Clear worker assignments for swept handles — fixes R06/R12 golden correctness: active count after Remove/SweepIdle must be based only on live IDs
+    if n > 0 {
+        s.workerMu.Lock()
+        for h, tid := range preHandles {
+            if s.registry.Lookup(h) == nil {
+                if workerIdx, ok := s.transceiverToWorker[tid]; ok {
+                    if workerIdx >= 0 && workerIdx < len(s.workers) {
+                        s.workers[workerIdx].mu.Lock()
+                        if s.workers[workerIdx].assigned > 0 {
+                            s.workers[workerIdx].assigned--
+                        }
+                        s.workers[workerIdx].mu.Unlock()
+                    }
+                    delete(s.transceiverToWorker, tid)
+                }
+                delete(s.handleToTransceiver, h)
+                delete(s.transceiverToHandle, tid)
+            }
+        }
+        s.workerMu.Unlock()
+    }
+    return n
+}
 func (s *Server) Shutdown() {
     s.mu.Lock()
     s.shutdownFlag = true

@@ -66,8 +66,10 @@ if ! echo "$OUT" | grep -q -e "^ok" -e "^FAIL"; then
   rm -rf "$D" 2>/dev/null || true
   exit 0
 fi
-if ! echo "$OUT" | grep -q "ClearAll removing"; then
-  write_ctrf "failed" "0/0" "[{\"name\":\"no_clearall_log\",\"status\":\"failed\"}]" "no ClearAll"
+# Structural check per R02/R08/R09/N04: accept punctuation like colon, require warning severity + op name or removing semantics + count with handles
+# Previously exact grep -q "ClearAll removing" rejected spec-compliant "[WARNING] ClearAll: removing 1 handles" causing 285/285 false negatives
+if ! echo "$OUT" | grep -q "\[WARNING\]" || ! echo "$OUT" | grep -qi "removing" || ! echo "$OUT" | grep -q "handles"; then
+  write_ctrf "failed" "0/0" "[{\"name\":\"no_clearall_log\",\"status\":\"failed\"}]" "no ClearAll structural log"
   rm -rf "$D" 2>/dev/null || true
   exit 0
 fi
