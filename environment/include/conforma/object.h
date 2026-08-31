@@ -1,5 +1,4 @@
 #pragma once
-// Hard boundary v5 - includes FlatMem, ModuleState, PowerClass, MaxPower per dashboard commits
 #define LOWER_IDENTIFIER 0
 #define LOWER_FLAT_MEM_OFFSET 2
 #define LOWER_FLAT_MEM_BIT 7
@@ -46,6 +45,3 @@
 #define CDB_BG_MASK 0x06
 #define CDB_BG_SHIFT 1
 #define CDB_FULL_PAGE_READ (1<<3)
-
-// Vendor - Avocado weak: AsciiTrim trailing spaces/nulls ONLY, FormatOUI uppercase colon
-// Power - Avocado weak: PowerClass raw 0..7 +1 => 1..8, MaxPower raw 0..31 *100

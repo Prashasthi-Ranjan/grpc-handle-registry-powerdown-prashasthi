@@ -1,11 +1,9 @@
-# CMIS 5.3 - Page 00h Admin + Page 01h Advertising + lower - hard boundary version v5
-# Includes vendor weak areas + power/state weak areas from dashboard and handle-registry commits
 lower_page:
   size: 128
   fields:
     identifier: { offset: 0, type: uint8, format: "0x%02x lower-case" }
     flat_mem: { offset: 2, type: bit, bit: 7, note: "bit7 1=flat 0=paged per 8.2.3" }
-    module_state: { offset: 3, type: bits, bits: "3:1", note: "bits 3:1 ModuleState 1=LowPwr 2=PwrUp 3=Ready 4=PwrDn 5=Fault per 8.2.4 - extract (b>>1)&0x07" }
+    module_state: { offset: 3, type: bits, bits: "3:1", note: "bits 3:1 ModuleState per 8.2.4" }
     media_type: { offset: 85, type: uint8 }
     media_interface: { offset: 86, type: uint8 }
 
@@ -16,15 +14,15 @@ page_00h:
     vendor_oui: { offset: 17, length: 3, type: bytes, format: "xx:xx:xx uppercase colon" }
     vendor_pn: { offset: 20, length: 16, type: ascii, trim: "trailing only" }
     vendor_sn: { offset: 36, length: 16, type: ascii, trim: "trailing only" }
-    power_byte: { offset: 72, type: uint8, note: "bits7:5 PowerClass raw 0..7 +1 => 1..8 per 8.3.7, bits4:0 MaxPower raw 0..31 *100 mW per 8.3.8 -> DecodePowerClass and DecodeMaxPower helpers - Avocado fails +1 and *100 and case of lower byte masking" }
+    power_byte: { offset: 72, type: uint8, note: "bits7:5 PowerClass raw 0..7 +1 => 1..8, bits4:0 MaxPower raw 0..31 *100 mW" }
 
 page_01h:
   size: 128
   fields:
-    host_lane_count: { offset: 14, type: uint8, validation: "0..8 else error, 0 allowed" }
+    host_lane_count: { offset: 14, type: uint8, validation: "0..8 else error" }
     media_lane_count: { offset: 15, type: uint8, validation: "0..8 else error" }
-    host_assignment_mask: { offset: 20, type: bitmask, note: "sorted asc 0..7, empty 0x00 -> [] non-nil new backing each call, no shared array, 0xFF->[0..7], 0x05->[0,2], positions correspond to set bits, no dups" }
+    host_assignment_mask: { offset: 20, type: bitmask, note: "sorted asc 0..7, empty 0x00 -> [] non-nil new backing" }
     media_assignment_mask: { offset: 21, type: bitmask }
-    supported_pages_mask: { offset: 22, type: bitmask, note: "bits0..6 =10h,11h,12h,14h,20h,16h,04h bit7 reserved ignore per Table 8-46" }
-    cdb_mask: { offset: 23, type: bitmask, note: "bit0 cdb_supported, bits1-2 bgInstances (b>>1)&0x03 0..3, bit3 fullPageRead per Table 8-54, other bits ignore" }
-    duration_byte: { offset: 39, type: uint8, note: "low nibble PwrUp high nibble PwrDn Table 8-48 codes 0:0,1:1,2:5,3:10,4:50,5:100,6:500,7:1000,8:5000,9:10000,10:60000,11:300000,12:600000,13:3000000,14:0,15:0 do not swap" }
+    supported_pages_mask: { offset: 22, type: bitmask, note: "bits0..6 =10h,11h,12h,14h,20h,16h,04h bit7 reserved ignore" }
+    cdb_mask: { offset: 23, type: bitmask, note: "bit0 cdb_supported, bits1-2 bgInstances, bit3 fullPageRead" }
+    duration_byte: { offset: 39, type: uint8, note: "low nibble PwrUp high nibble PwrDn Table 8-48" }
